@@ -133,12 +133,12 @@ class MyNavigationService : Service() {
     companion object {
         private const val TAG = "MyNavigationService"
 
-        private const val PACKAGE_NAME = "com.example.routecanvas"
-
-        internal const val ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST =
-            "$PACKAGE_NAME.action.FOREGROUND_ONLY_LOCATION_BROADCAST"
-
-        internal const val EXTRA_LOCATION = "$PACKAGE_NAME.extra.LOCATION"
+//        private const val PACKAGE_NAME = "com.example.routecanvas"
+//
+//        internal const val ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST =
+//            "$PACKAGE_NAME.action.FOREGROUND_ONLY_LOCATION_BROADCAST"
+//
+//        internal const val EXTRA_LOCATION = "$PACKAGE_NAME.extra.LOCATION"
 
     }
 
