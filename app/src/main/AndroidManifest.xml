@@ -18,7 +18,7 @@
         android:theme="@style/Theme.RouteCanvas"
         tools:targetApi="31">
         <service
-            android:name="MyNavigationService"
+            android:name="MyLocationService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />

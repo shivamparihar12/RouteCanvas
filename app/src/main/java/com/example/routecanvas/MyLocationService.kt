@@ -7,13 +7,10 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.location.Location
-import android.nfc.Tag
 import android.os.Binder
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -22,19 +19,12 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.security.PrivateKey
 import java.util.concurrent.TimeUnit
 
-class MyNavigationService : Service() {
+class MyLocationService : Service() {
 
 
     //    private var job = SupervisorJob()
@@ -46,11 +36,11 @@ class MyNavigationService : Service() {
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private val _locationStateFlow = MutableStateFlow<Location?>(null)
-    val location: StateFlow<Location?> = _locationStateFlow.asStateFlow()
+    val locationStateFlow: StateFlow<Location?> = _locationStateFlow.asStateFlow()
 
 
     inner class LocalBinder() : Binder() {
-        fun getService(): MyNavigationService = this@MyNavigationService
+        fun getService(): MyLocationService = this@MyLocationService
     }
 
 

@@ -29,12 +29,12 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
     private var canStartTrackingOP = false
-    private lateinit var myNavigationService: MyNavigationService
+    private lateinit var myNavigationService: MyLocationService
     private var serviceBound: Boolean = false
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName?, service: IBinder?) {
-            val binder = service as MyNavigationService.LocalBinder
+            val binder = service as MyLocationService.LocalBinder
             myNavigationService = binder.getService()
             serviceBound = true
 
@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         // Bind to MyNavigationService
-        Intent(this, MyNavigationService::class.java).also { intent ->
+        Intent(this, MyLocationService::class.java).also { intent ->
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
     private fun startLocationUpdates() {
         // Use CoroutineScope to collect location updates
         CoroutineScope(Dispatchers.IO).launch {
-            myNavigationService.location.collect { location ->
+            myNavigationService.locationStateFlow.collect { location ->
                 Log.d(TAG, "Location update: ${location?.latitude}, ${location?.longitude}")
                 // Handle location updates here as needed
             }
