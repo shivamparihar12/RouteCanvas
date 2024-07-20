@@ -1,12 +1,10 @@
-package com.example.routecanvas
+package com.example.routecanvas.db
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.routecanvas.db.LocationEntity
-import com.example.routecanvas.db.LocationEntityDAO
 import com.example.routecanvas.db.converters.DateConverters
 import com.example.routecanvas.db.converters.LocationPointsConverter
 
