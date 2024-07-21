@@ -61,7 +61,7 @@ class MyLocationService : Service() {
         }
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                if (locationResult?.lastLocation != null) {
+                if (locationResult.lastLocation != null) {
                     val currentLocation = locationResult.lastLocation
                     Log.d(TAG, "last location ${currentLocation.toString()}")
                     _locationStateFlow.value = currentLocation
