@@ -2,7 +2,6 @@ package com.example.routecanvas.ui.composables
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +26,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,13 +38,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import com.example.routecanvas.R
 import com.example.routecanvas.ui.theme.RouteCanvasTheme
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
+fun HomeScreen(navigateToAbout: () -> Unit, navigateToRunning: () -> Unit) {
 //    Button(onClick = { navigateTo(Screens.TrackScreen(id = 12)) }) {
 //        Text(text = "go to specific track")
 //    }
@@ -51,9 +53,9 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
     val gridState = rememberLazyGridState()
     val topAppBarHeight = 56.dp
     val topAppBarHeightPx = with(LocalDensity.current) { topAppBarHeight.roundToPx().toFloat() }
-    val topAppBarOffsetHeightPx = remember { mutableStateOf(0f) }
-    var previousIndex by remember { mutableStateOf(0) }
-    var previousScrollOffset by remember { mutableStateOf(0) }
+    val topAppBarOffsetHeightPx = remember { mutableFloatStateOf(0f) }
+    var previousIndex by remember { mutableIntStateOf(0) }
+    var previousScrollOffset by remember { mutableIntStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -74,12 +76,13 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
                             .padding(8.dp)
                             .fillMaxWidth()
                     ) {
+
                         Image(
                             painter = painterResource(id = R.drawable.ic_launcher_foreground),
                             contentDescription = "image"
                         )
                         Text(
-                            text = "Item ${index}",
+                            text = "Item $index",
                             modifier = Modifier.padding(10.dp)
                         )
                     }
@@ -89,7 +92,12 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
             TopAppBar(
                 title = { Text(text = "RouteCanvas") },
                 modifier = Modifier
-                    .offset { IntOffset(x = 0, y = topAppBarOffsetHeightPx.value.roundToInt()) },
+                    .offset {
+                        IntOffset(
+                            x = 0,
+                            y = topAppBarOffsetHeightPx.floatValue.roundToInt()
+                        )
+                    },
                 actions = {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(imageVector = Icons.Filled.Menu, contentDescription = "Menu")
@@ -104,12 +112,12 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
                                     contentDescription = "Start running"
                                 )
                             },
-                            onClick = { /*TODO start running > plan out how to proceed from here */ }
+                            onClick = { navigateToRunning() }
                         )
 
                         DropdownMenuItem(
                             text = { Text(text = "About") },
-                            onClick = { /*TODO move to about about compose*/ },
+                            onClick = { navigateToAbout() },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Filled.Info,
@@ -123,7 +131,7 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
         }
 
     }
-    var toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
+    val toolbarOffsetHeightPx = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(gridState) {
         snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }
             .collect { (index, scrollOffset) ->
@@ -135,20 +143,21 @@ fun HomeScreen(navigateTo: (route: Screens.TrackScreen) -> Unit) {
                     isScrollingUp -> 0f
                     else -> -topAppBarHeightPx
                 }
-                toolbarOffsetHeightPx.value = toolbarOffset.coerceIn(-topAppBarHeightPx, 0f)
+                toolbarOffsetHeightPx.floatValue = toolbarOffset.coerceIn(-topAppBarHeightPx, 0f)
                 previousIndex = index
                 previousScrollOffset = scrollOffset
             }
     }
-    topAppBarOffsetHeightPx.value = toolbarOffsetHeightPx.value
+    topAppBarOffsetHeightPx.floatValue = toolbarOffsetHeightPx.floatValue
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     RouteCanvasTheme {
-        HomeScreen {
-
-        }
+        val navController = rememberNavController()
+        HomeScreen(
+            navigateToAbout = { navController.navigate(Screens.About) },
+            navigateToRunning = { navController.navigate(Screens.RunningScreen) })
     }
 }

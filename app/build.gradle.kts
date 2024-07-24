@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.navigation.compose)
     implementation(libs.kotlin.serialization)
+    implementation(libs.google.accompanist)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

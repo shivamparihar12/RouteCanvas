@@ -39,7 +39,7 @@ class MyLocationService : Service() {
     val locationStateFlow: StateFlow<Location?> = _locationStateFlow.asStateFlow()
 
 
-    inner class LocalBinder() : Binder() {
+    inner class LocalBinder : Binder() {
         fun getService(): MyLocationService = this@MyLocationService
     }
 
@@ -51,12 +51,14 @@ class MyLocationService : Service() {
         return START_STICKY
     }
 
-    private fun intializeLocationService() {
+    private fun initializeLocationService() {
         Log.d(TAG, "under init Loc Service")
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationRequest = LocationRequest.create().apply {
-            interval = TimeUnit.MINUTES.toMillis(1)
-            fastestInterval = TimeUnit.MINUTES.toMillis(1)
+//            interval = TimeUnit.MINUTES.toMillis(1)
+//            fastestInterval = TimeUnit.MINUTES.toMillis(1)
+            interval = 100
+            fastestInterval=100
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         locationCallback = object : LocationCallback() {
@@ -69,12 +71,12 @@ class MyLocationService : Service() {
 
             }
         }
-        startLocationUpdate()
+//        startLocationUpdate()
     }
 
     override fun onCreate() {
         Log.d(TAG, "inside onCreate()")
-        intializeLocationService()
+        initializeLocationService()
         startForegroundServiceHere()
 //        startForeground(notificationIdentifier, createNotification()) TODO client will start service expose as fun to do that
         super.onCreate()
