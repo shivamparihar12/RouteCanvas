@@ -58,7 +58,7 @@ class MyLocationService : Service() {
 //            interval = TimeUnit.MINUTES.toMillis(1)
 //            fastestInterval = TimeUnit.MINUTES.toMillis(1)
             interval = 100
-            fastestInterval=100
+            fastestInterval = 100
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         locationCallback = object : LocationCallback() {
@@ -82,10 +82,10 @@ class MyLocationService : Service() {
         super.onCreate()
     }
 
-     fun startForegroundServiceHere() {
+    fun startForegroundServiceHere() {
         val notification = createNotification()
         startForeground(notificationIdentifier, notification)
-        startLocationUpdate()
+//        startLocationUpdate()
     }
 
     override fun onDestroy() {
@@ -98,13 +98,17 @@ class MyLocationService : Service() {
         return serviceBinder
     }
 
-    private fun stopLocationUpdates() {
+    fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     @SuppressLint("MissingPermission")
-    private fun startLocationUpdate() {
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    fun startLocationUpdate() {
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     private fun createNotification(): Notification {

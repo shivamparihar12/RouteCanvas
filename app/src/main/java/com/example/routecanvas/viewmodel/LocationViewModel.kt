@@ -69,6 +69,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
 
     fun startGettingLocationUpdate() {
+        _locationService?.get()?.startLocationUpdate()
         viewModelScope.launch {
             _locationService?.get()?.locationStateFlow?.collect { location ->
                 location?.let {
@@ -78,8 +79,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun stopLocationUpdate() = _locationService?.get()?.stopLocationUpdates()
+
     fun getLocationList() = locationList
 
+    fun clearLocationList() = viewModelScope.launch { _locationList.value = emptyList() }
     override fun onCleared() {
         super.onCleared()
         unBindLocationService()
