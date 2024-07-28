@@ -13,7 +13,9 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,12 +32,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,58 +56,59 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.routecanvas.db.TrackDatabase
 import com.example.routecanvas.model.LocationPoints
+import com.example.routecanvas.repository.TrackRepository
 import com.example.routecanvas.ui.theme.RouteCanvasTheme
 import com.example.routecanvas.viewmodel.LocationViewModel
 import com.example.routecanvas.viewmodel.LocationViewModelFactory
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import kotlin.coroutines.resume
 
+
+/*think about how to transition after saving and then displaying that track is saved
+ for now just show a Toast
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun RunningScreen(locationViewModel: LocationViewModel) {
+fun RunningScreen(application: Application, trackRepository: TrackRepository) {
     val TAG = "RunningScreen Composable"
-    var isPermissionsAndGpsReady by remember { mutableStateOf(false) }
-
+    var isPermissionsAndGpsReady by rememberSaveable { mutableStateOf(false) }
     if (!isPermissionsAndGpsReady) {
         LocationPermissionAndGpsCheck {
             isPermissionsAndGpsReady = true
         }
     } else {
 
-        LaunchedEffect(Unit) {
-            locationViewModel.bindLocationService()
-        }
+        val locationViewModel: LocationViewModel = viewModel(
+            factory = LocationViewModelFactory(
+                application = application,
+                trackRepository = trackRepository,
+                owner = LocalSavedStateRegistryOwner.current
+            )
+        )
 
-        DisposableEffect(Unit) {
-            onDispose {
-                locationViewModel.stopLocationUpdate()
-                locationViewModel.clearLocationList()
-                locationViewModel.unBindLocationService()
-            }
-        }
-
-        val serviceBounded by locationViewModel.serviceBounded.collectAsState()
-
-        if (!serviceBounded) return Box(modifier = Modifier.fillMaxSize()) {
+        if (!locationViewModel.serviceBounded.collectAsState().value) return Box(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "Pls Restart App",
                 modifier = Modifier.align(Alignment.Center),
                 textAlign = TextAlign.Center
             )
         }
-//        locationViewModel.startGettingLocationUpdate() // handle this with button
 
+        val startTrackTime = remember { mutableLongStateOf(0L) }
+        val endTrackTime = remember { mutableLongStateOf(0L) }
         // canvas -> bitmap requirements
         val context = LocalContext.current
         val graphicsLayer = rememberGraphicsLayer()
@@ -124,7 +130,7 @@ fun RunningScreen(locationViewModel: LocationViewModel) {
                     val bitmap = graphicsLayer.toImageBitmap()
                     val uri = bitmap.asAndroidBitmap()
                         .saveToDisk(context)// learnt new thing kotlin , extension fun cool!!
-                    saveBitmap(context, uri)
+                    saveBitmap(context, locationViewModel, uri, startTrackTime, endTrackTime)
                 }
             } else if (writeStorageAccessState.shouldShowRationale) {
                 coroutineScope.launch {
@@ -154,28 +160,35 @@ fun RunningScreen(locationViewModel: LocationViewModel) {
                         drawLayer(graphicsLayer = graphicsLayer)
                     }
                 }) {
-                val pointsList = locationViewModel.getLocationList().collectAsState()
+//                val pointsList = locationViewModel.getLocationList().collectAsState()
                 TrackingPath(
-                    pointsList = pointsList, modifier = Modifier.fillMaxWidth()
+                    pointsList = locationViewModel.getLocationList()
+                        .collectAsStateWithLifecycle(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(onClick = {
                     locationViewModel.startGettingLocationUpdate()
                     Log.d(TAG, "Location updates started...")
                 }, modifier = Modifier.padding(10.dp)) {
+                    startTrackTime.longValue = System.currentTimeMillis()
                     Text(text = "Start")
                 }
                 Button(onClick = {
                     locationViewModel.stopLocationUpdate()
+                    endTrackTime.longValue = System.currentTimeMillis()
                     Log.d(TAG, "Location Updates Stopped...")
                 }, modifier = Modifier.padding(10.dp)) {
                     Text(text = "Stop")
                 }
                 Button(
-                    onClick = { saveBitmapFromComposable() }, modifier = Modifier.padding(10.dp)
+                    onClick = {
+                        saveBitmapFromComposable()
+                    }, modifier = Modifier.padding(10.dp)
                 ) {
                     Text(text = "Save")
                 }
@@ -186,8 +199,15 @@ fun RunningScreen(locationViewModel: LocationViewModel) {
     }
 }
 
-private fun CoroutineScope.saveBitmap(context: Context, uri: Uri) {
-    // TODO well you have now  uri, get other stats and save into room db
+private fun saveBitmap(
+    context: Context,
+    locationViewModel: LocationViewModel,
+    uri: Uri,
+    startTrackTime: MutableState<Long>,
+    endTrackTime: MutableState<Long>
+) {
+    locationViewModel.saveTrack(uri, startTrackTime, endTrackTime)
+    Toast.makeText(context, "Track Saved", Toast.LENGTH_SHORT).show()
 }
 
 private suspend fun Bitmap.saveToDisk(context: Context): Uri {
@@ -204,10 +224,10 @@ private suspend fun scanFilePath(context: Context, path: String): Uri? {
     return suspendCancellableCoroutine {
         MediaScannerConnection.scanFile(
             context, arrayOf(path), arrayOf("image/png")
-        ) { _, scanneduri ->
-            if (scanneduri == null) {
+        ) { _, scannedUri ->
+            if (scannedUri == null) {
                 it.cancel(Exception("File $path could not be found"))
-            } else it.resume(scanneduri)
+            } else it.resume(scannedUri)
         }
     }
 }
@@ -225,8 +245,9 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
         modifier = modifier
             .fillMaxSize()
             .padding(10.dp)
+            .background(Color.White)
     ) {
-        Log.d("MainAC", "size of points list $pointsList.size")
+        Log.d("MainAC", "size of points list ${pointsList.value.size}")
 
         if (pointsList.value.isEmpty()) return@Canvas
 
@@ -267,7 +288,10 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
         )
 
         val firstPoint = toScreenCoordinates(
-            LocationPoints(pointsList.value.first().longitude, pointsList.value.last().latitude),
+            LocationPoints(
+                pointsList.value.first().longitude,
+                pointsList.value.last().latitude
+            ),
             size,
             minLat - latPadding,
             maxLat + latPadding,
@@ -367,7 +391,7 @@ fun isGpsEnabled(context: Context): Boolean {
 
 fun openAppSettings(context: Context) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-    intent.data = android.net.Uri.fromParts("package", context.packageName, null)
+    intent.data = Uri.fromParts("package", context.packageName, null)
     context.startActivity(intent)
 }
 
@@ -388,9 +412,17 @@ private fun toScreenCoordinates(
 @Preview(showBackground = true)
 @Composable
 fun RunningScreenPreview() {
+    val trackRepository = TrackRepository(TrackDatabase(LocalContext.current))
     val locationViewModel: LocationViewModel =
-        viewModel(factory = LocationViewModelFactory(Application()))
+        viewModel(
+            factory = LocationViewModelFactory(
+                Application(),
+                trackRepository,
+                LocalSavedStateRegistryOwner.current
+            )
+        )
+    val application = Application()
     RouteCanvasTheme {
-        RunningScreen(locationViewModel)
+        RunningScreen(application, trackRepository)
     }
 }

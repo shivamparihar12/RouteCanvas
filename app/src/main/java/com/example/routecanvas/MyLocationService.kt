@@ -25,11 +25,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.TimeUnit
 
 class MyLocationService : Service() {
-
-
     //    private var job = SupervisorJob()
     private val notificationIdentifier = 123
-
     //    private var scope = CoroutineScope(Dispatchers.IO + job)
     private val serviceBinder = LocalBinder()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -38,11 +35,9 @@ class MyLocationService : Service() {
     private val _locationStateFlow = MutableStateFlow<Location?>(null)
     val locationStateFlow: StateFlow<Location?> = _locationStateFlow.asStateFlow()
 
-
     inner class LocalBinder : Binder() {
         fun getService(): MyLocationService = this@MyLocationService
     }
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Toast.makeText(this, "Location Service starting", Toast.LENGTH_SHORT).show()
@@ -128,14 +123,5 @@ class MyLocationService : Service() {
 
     companion object {
         private const val TAG = "MyNavigationService"
-
-//        private const val PACKAGE_NAME = "com.example.routecanvas"
-//
-//        internal const val ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST =
-//            "$PACKAGE_NAME.action.FOREGROUND_ONLY_LOCATION_BROADCAST"
-//
-//        internal const val EXTRA_LOCATION = "$PACKAGE_NAME.extra.LOCATION"
-
     }
-
 }

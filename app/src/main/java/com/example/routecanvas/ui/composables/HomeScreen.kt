@@ -1,5 +1,6 @@
 package com.example.routecanvas.ui.composables
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,12 +42,24 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.example.routecanvas.R
+import com.example.routecanvas.db.TrackDatabase
+import com.example.routecanvas.repository.TrackRepository
 import com.example.routecanvas.ui.theme.RouteCanvasTheme
+import com.example.routecanvas.viewmodel.TrackViewModel
 import kotlin.math.roundToInt
+
+
+// we just setuped saving and fetching , now we are about test the functionality
+
+const val TAG = "HomeScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navigateToAbout: () -> Unit, navigateToRunning: () -> Unit) {
+fun HomeScreen(
+    navigateToAbout: () -> Unit,
+    navigateToRunning: () -> Unit,
+//    trackViewModel: TrackViewModel,
+) {
 //    Button(onClick = { navigateTo(Screens.TrackScreen(id = 12)) }) {
 //        Text(text = "go to specific track")
 //    }
@@ -57,6 +71,8 @@ fun HomeScreen(navigateToAbout: () -> Unit, navigateToRunning: () -> Unit) {
     var previousIndex by remember { mutableIntStateOf(0) }
     var previousScrollOffset by remember { mutableIntStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
+
+//    Log.d(TAG, "Track table  ${trackViewModel.getallTracks()}")
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Box {
@@ -156,8 +172,11 @@ fun HomeScreen(navigateToAbout: () -> Unit, navigateToRunning: () -> Unit) {
 fun HomeScreenPreview() {
     RouteCanvasTheme {
         val navController = rememberNavController()
+        val trackViewModel = TrackViewModel(TrackRepository(TrackDatabase(LocalContext.current)))
         HomeScreen(
             navigateToAbout = { navController.navigate(Screens.About) },
-            navigateToRunning = { navController.navigate(Screens.RunningScreen) })
+            navigateToRunning = { navController.navigate(Screens.RunningScreen) },
+//            trackViewModel = trackViewModel
+        )
     }
 }
