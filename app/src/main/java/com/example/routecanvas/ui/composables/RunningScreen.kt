@@ -1,12 +1,12 @@
 package com.example.routecanvas.ui.composables
 
 import android.Manifest
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.location.Location
-import android.location.LocationManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -14,6 +14,9 @@ import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,12 +28,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -60,9 +64,10 @@ import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.routecanvas.LocationSettingsState
 import com.example.routecanvas.db.TrackDatabase
 import com.example.routecanvas.model.LocationPoints
 import com.example.routecanvas.repository.TrackRepository
@@ -83,29 +88,21 @@ import kotlin.coroutines.resume
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RunningScreen(application: Application, trackRepository: TrackRepository) {
+    val locationViewModel: LocationViewModel = viewModel(
+        factory = LocationViewModelFactory(
+            application = application,
+            trackRepository = trackRepository,
+            owner = LocalSavedStateRegistryOwner.current
+        )
+    )
     val TAG = "RunningScreen Composable"
     var isPermissionsAndGpsReady by rememberSaveable { mutableStateOf(false) }
     if (!isPermissionsAndGpsReady) {
-        LocationPermissionAndGpsCheck {
+        LocationPermissionAndGpsCheck(locationViewModel) {
             isPermissionsAndGpsReady = true
         }
     } else {
 
-        val locationViewModel: LocationViewModel = viewModel(
-            factory = LocationViewModelFactory(
-                application = application,
-                trackRepository = trackRepository,
-                owner = LocalSavedStateRegistryOwner.current
-            )
-        )
-
-        if (!locationViewModel.serviceBounded.collectAsState().value) return Box(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Pls Restart App",
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
-        }
 
         val startTrackTime = remember { mutableLongStateOf(0L) }
         val endTrackTime = remember { mutableLongStateOf(0L) }
@@ -122,7 +119,13 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                 listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         )
-
+        if (!locationViewModel.serviceBounded.collectAsState().value) return Box(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "Pls Restart App",
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+        }
         // apparently this should stay in my viewmodel. But F*** yeah here we go.
         fun saveBitmapFromComposable() {
             if (writeStorageAccessState.allPermissionsGranted) {
@@ -130,6 +133,7 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                     val bitmap = graphicsLayer.toImageBitmap()
                     val uri = bitmap.asAndroidBitmap()
                         .saveToDisk(context)// learnt new thing kotlin , extension fun cool!!
+                    Log.d(TAG, uri.toString())
                     saveBitmap(context, locationViewModel, uri, startTrackTime, endTrackTime)
                 }
             } else if (writeStorageAccessState.shouldShowRationale) {
@@ -146,7 +150,11 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
             } else writeStorageAccessState.launchMultiplePermissionRequest()
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
             Box(modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -162,35 +170,34 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                 }) {
 //                val pointsList = locationViewModel.getLocationList().collectAsState()
                 TrackingPath(
-                    pointsList = locationViewModel.getLocationList()
-                        .collectAsStateWithLifecycle(),
+                    pointsList = locationViewModel.getLocationList().collectAsStateWithLifecycle(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
+
             ) {
                 Button(onClick = {
                     locationViewModel.startGettingLocationUpdate()
                     Log.d(TAG, "Location updates started...")
                 }, modifier = Modifier.padding(10.dp)) {
                     startTrackTime.longValue = System.currentTimeMillis()
-                    Text(text = "Start")
+                    Text(text = "Start", style = MaterialTheme.typography.bodySmall)
                 }
                 Button(onClick = {
                     locationViewModel.stopLocationUpdate()
                     endTrackTime.longValue = System.currentTimeMillis()
                     Log.d(TAG, "Location Updates Stopped...")
                 }, modifier = Modifier.padding(10.dp)) {
-                    Text(text = "Stop")
+                    Text(text = "Stop", style = MaterialTheme.typography.bodySmall)
                 }
                 Button(
                     onClick = {
                         saveBitmapFromComposable()
                     }, modifier = Modifier.padding(10.dp)
                 ) {
-                    Text(text = "Save")
+                    Text(text = "Save", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -206,18 +213,21 @@ private fun saveBitmap(
     startTrackTime: MutableState<Long>,
     endTrackTime: MutableState<Long>
 ) {
+    // thats where im calling save in to room db
     locationViewModel.saveTrack(uri, startTrackTime, endTrackTime)
     Toast.makeText(context, "Track Saved", Toast.LENGTH_SHORT).show()
 }
 
-private suspend fun Bitmap.saveToDisk(context: Context): Uri {
+private fun Bitmap.saveToDisk(context: Context): Uri {
     val file = File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
         "track-${System.currentTimeMillis()}.png"
     )
+    Log.d("$TAG\tfile path\t", file.path)
     file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
+    return file.path.toUri()
 
-    return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
+//    return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
 }
 
 private suspend fun scanFilePath(context: Context, path: String): Uri? {
@@ -275,7 +285,8 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
         drawPath(
             path = path,
             color = Color.Blue,
-            style = Stroke(width = 5f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            blendMode = androidx.compose.ui.graphics.BlendMode.SrcOver
         )
 
         val lastPoint = toScreenCoordinates(
@@ -289,8 +300,7 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
 
         val firstPoint = toScreenCoordinates(
             LocationPoints(
-                pointsList.value.first().longitude,
-                pointsList.value.last().latitude
+                pointsList.value.first().longitude, pointsList.value.last().latitude
             ),
             size,
             minLat - latPadding,
@@ -298,14 +308,14 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
             minLon - lonPadding,
             maxLon + lonPadding
         )
-        firstPoint.let {
-            drawCircle(
-                color = Color.Green, radius = 10f, center = it
-            )
-            drawCircle(
-                color = Color.White, radius = 8f, center = it
-            )
-        }
+//        firstPoint.let {
+//            drawCircle(
+//                color = Color.Green, radius = 10f, center = it
+//            )
+//            drawCircle(
+//                color = Color.White, radius = 8f, center = it
+//            )
+//        }
         lastPoint.let {
             drawCircle(
                 color = Color.Red, radius = 10f, center = it
@@ -321,72 +331,114 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun LocationPermissionAndGpsCheck(onPermissionAndGpsReady: () -> Unit) {
+fun LocationPermissionAndGpsCheck(
+    locationViewModel: LocationViewModel, onPermissionAndGpsReady: () -> Unit
+) {
     val context = LocalContext.current
     val locationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
-    var isGPSEnabled by remember { mutableStateOf(isGpsEnabled(context)) }
-    LaunchedEffect(Unit) {
-        if (!locationPermissionState.allPermissionsGranted) {
-            locationPermissionState.launchMultiplePermissionRequest()
+    val locationSettingsState by locationViewModel.locationSettingsState.collectAsState()
+
+    val gpsSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            locationViewModel.checkLocationSetting()
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    LaunchedEffect(locationPermissionState.allPermissionsGranted) {
+        if (!locationPermissionState.allPermissionsGranted) {
+            locationPermissionState.launchMultiplePermissionRequest()
+        } else {
+            locationViewModel.checkLocationSetting()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when {
-            locationPermissionState.allPermissionsGranted && isGPSEnabled -> {
+            locationPermissionState.allPermissionsGranted && locationSettingsState == LocationSettingsState.Satisfied -> {
                 LaunchedEffect(Unit) {
                     onPermissionAndGpsReady()
                 }
             }
 
             locationPermissionState.shouldShowRationale -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text(text = "Location permission is required for this feature to work.")
+                Column(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Location permission is required for this feature to work.",
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { locationPermissionState.launchMultiplePermissionRequest() }) {
-                        Text(text = "Request Permission")
+                        Text(
+                            text = "Request Permission", style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
 
             !locationPermissionState.allPermissionsGranted -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text("Location permission has been denied. Please enable it in app settings.")
+                Column(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Location permission has been denied. Please enable it in app settings.",
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { openAppSettings(context) }) {
-                        Text(text = "Open Setting")
+                        Text(text = "Open Settings", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
 
-            !isGPSEnabled -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text("GPS is disabled. Please enable it to use this feature.")
+            locationSettingsState is LocationSettingsState.Resolvable -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "GPS settings need to be adjusted. Please enable high-accuracy mode.",
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = {
-                        openGpsSettings(context)
-                        isGPSEnabled = isGpsEnabled(context)
+                        val intentSenderRequest =
+                            IntentSenderRequest.Builder((locationSettingsState as LocationSettingsState.Resolvable).exception.resolution)
+                                .build()
+                        gpsSettingsLauncher.launch(intentSenderRequest)
                     }) {
-                        Text("Enable GPS")
+                        Text("Adjust GPS Settings", style = MaterialTheme.typography.bodySmall)
                     }
+                }
+            }
+
+            locationSettingsState == LocationSettingsState.Inadequate -> {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        "Your device's GPS capabilities are inadequate for this app. Please use a device with better GPS support.",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
     }
-}
-
-fun openGpsSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-    context.startActivity(intent)
-}
-
-fun isGpsEnabled(context: Context): Boolean {
-    val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java)
-    return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true
 }
 
 fun openAppSettings(context: Context) {
@@ -413,14 +465,6 @@ private fun toScreenCoordinates(
 @Composable
 fun RunningScreenPreview() {
     val trackRepository = TrackRepository(TrackDatabase(LocalContext.current))
-    val locationViewModel: LocationViewModel =
-        viewModel(
-            factory = LocationViewModelFactory(
-                Application(),
-                trackRepository,
-                LocalSavedStateRegistryOwner.current
-            )
-        )
     val application = Application()
     RouteCanvasTheme {
         RunningScreen(application, trackRepository)

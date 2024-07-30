@@ -9,9 +9,7 @@ import kotlinx.coroutines.launch
 
 class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel() {
 
-    fun getallTracks() = viewModelScope.launch(Dispatchers.IO) {
-        trackRepository.getAllTracks()
-    }
+    fun getAllTracks() = trackRepository.getAllTracks()
 
     fun delTrack(track: LocationEntity) =
         viewModelScope.launch { trackRepository.deleteTrack(track) }

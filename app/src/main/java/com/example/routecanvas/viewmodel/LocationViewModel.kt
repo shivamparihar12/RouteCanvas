@@ -14,9 +14,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.routecanvas.LocationSettingsManager
+import com.example.routecanvas.LocationSettingsState
 import com.example.routecanvas.MyLocationService
 import com.example.routecanvas.db.LocationEntity
 import com.example.routecanvas.repository.TrackRepository
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,14 +38,23 @@ class LocationViewModel(
     application: Application,
     val trackRepository: TrackRepository,
     private val savedStateHandle: SavedStateHandle
-) :
-    AndroidViewModel(application) {
+) : AndroidViewModel(application) {
     private val _locationList = savedStateHandle.getStateFlow("locationList", emptyList<Location>())
     private val locationList = _locationList
 
     private var _locationService: WeakReference<MyLocationService>? = null
     private var _serviceBounded = MutableStateFlow(false)
     val serviceBounded = _serviceBounded.asStateFlow()
+
+    private val locationSettingsManager =
+        LocationSettingsManager(getApplication<Application>().applicationContext)
+
+    val locationSettingsState: StateFlow<LocationSettingsState> =
+        locationSettingsManager.locationSettingsState
+
+    fun checkLocationSetting() {
+        locationSettingsManager.checkLocationSettings()
+    }
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName?, service: IBinder?) {
@@ -59,12 +74,14 @@ class LocationViewModel(
     }
 
     fun bindLocationService() {
-        if (!serviceBounded.value)
-            Intent(getApplication(), MyLocationService::class.java).also { intent: Intent ->
-                getApplication<Application>().bindService(
-                    intent, serviceConnection, Context.BIND_AUTO_CREATE
-                )
-            }
+        if (!serviceBounded.value) Intent(
+            getApplication(),
+            MyLocationService::class.java
+        ).also { intent: Intent ->
+            getApplication<Application>().bindService(
+                intent, serviceConnection, Context.BIND_AUTO_CREATE
+            )
+        }
     }
 
     fun unBindLocationService() {
@@ -114,4 +131,6 @@ class LocationViewModel(
             ).let { trackRepository.saveTrack(it) }
         }
     }
+
+
 }

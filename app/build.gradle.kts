@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.kotlin.serialization)
     implementation(libs.google.accompanist)
+    implementation(libs.coil)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

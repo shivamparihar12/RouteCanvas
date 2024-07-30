@@ -14,14 +14,17 @@ ksp = "1.9.0-1.0.13"
 gsonVersion = "2.11.0"
 navVersion = "2.8.0-beta05"
 kotlinSerializationVersion = "1.6.3"
-accompanistVersion="0.35.1-alpha"
+accompanistVersion = "0.35.1-alpha"
+coilVersion = "2.7.0"
+
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.9.1" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
@@ -37,7 +40,8 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerializationVersion" }
-google-accompanist = {group="com.google.accompanist",name="accompanist-permissions",version.ref="accompanistVersion"}
+google-accompanist = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistVersion" }
+coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

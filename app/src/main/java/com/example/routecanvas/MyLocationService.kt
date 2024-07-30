@@ -27,10 +27,11 @@ import java.util.concurrent.TimeUnit
 class MyLocationService : Service() {
     //    private var job = SupervisorJob()
     private val notificationIdentifier = 123
+
     //    private var scope = CoroutineScope(Dispatchers.IO + job)
     private val serviceBinder = LocalBinder()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
+//    private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private val _locationStateFlow = MutableStateFlow<Location?>(null)
     val locationStateFlow: StateFlow<Location?> = _locationStateFlow.asStateFlow()
@@ -49,13 +50,13 @@ class MyLocationService : Service() {
     private fun initializeLocationService() {
         Log.d(TAG, "under init Loc Service")
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationRequest = LocationRequest.create().apply {
-//            interval = TimeUnit.MINUTES.toMillis(1)
-//            fastestInterval = TimeUnit.MINUTES.toMillis(1)
-            interval = 100
-            fastestInterval = 100
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+//        locationRequest = LocationRequest.create().apply {
+////            interval = TimeUnit.MINUTES.toMillis(1)
+////            fastestInterval = TimeUnit.MINUTES.toMillis(1)
+//            interval = 100
+//            fastestInterval = 100
+//            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//        }
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 if (locationResult.lastLocation != null) {
@@ -123,5 +124,10 @@ class MyLocationService : Service() {
 
     companion object {
         private const val TAG = "MyNavigationService"
+        val locationRequest: LocationRequest = LocationRequest.create().apply {
+            interval = 100
+            fastestInterval = 100
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
     }
 }
