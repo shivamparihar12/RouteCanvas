@@ -1,11 +1,26 @@
 # RouteCanvas
 
-The motivation behind this app is to provide the same functionality, with hopefully the same design, as shown in this [Twitter post](https://twitter.com/samdape/status/1808174105482436709?ref_src=twsrc%5Etfw).
+RouteCanvas is an Android application that allows users to track and visualize their routes on a canvas.
 
-This app is still in the development phase.
+## About
 
-As of the last commit `c7e7c67e41e71fff7462ddebef4b78b086f916bc`, the app can draw the route we have traveled.
+The motivation behind this app is to provide the same functionality, hopefully with the same design, as shown in [this X.com post](https://x.com/samdape/status/1808174105482436709) by [@samdape](https://x.com/samdape).
 
-## Inspiration
+I created this app because I liked the design. The app allows users to draw their routes on a canvas, which can be useful for tracking walks, runs, or other journeys.
 
-[View the post on Twitter](https://twitter.com/samdape/status/1808174105482436709?ref_src=twsrc%5Etfw)
+## Features
+
+- Route tracking: Users can start and stop tracking their route
+- Visual representation: Routes are displayed as lines on a canvas
+- Date and time tracking: Each route is associated with a date and duration
+- Save functionality: Users can save their routes
+
+## Screenshots and Demo
+
+<p> 
+  <img src="https://github.com/shivamparihar12/RouteCanvas/blob/main/images/Demo.gif" width="250" height="550" alt="Demo">
+  <img src="https://github.com/shivamparihar12/RouteCanvas/blob/main/images/About.jpeg" width="250" height="550" alt="About Screen">
+  <img src="https://github.com/shivamparihar12/RouteCanvas/blob/main/images/Running.jpeg" width="250" height="550" alt="Route Tracking">
+  <img src="https://github.com/shivamparihar12/RouteCanvas/blob/main/images/Track.jpeg" width="250" height="550" alt="Saved Routes">
+  <img src="https://github.com/shivamparihar12/RouteCanvas/blob/main/images/Home.jpeg" width="250" height="550" alt="Route Canvas">
+</p>
