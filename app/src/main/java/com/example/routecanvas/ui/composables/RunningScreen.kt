@@ -200,8 +200,8 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                     }
                     Button(
                         onClick = {
-                            saveBitmapFromComposable()
                             endTrackTime.longValue = System.currentTimeMillis()
+                            saveBitmapFromComposable()
                         }, modifier = Modifier.padding(10.dp)
                     ) {
 
