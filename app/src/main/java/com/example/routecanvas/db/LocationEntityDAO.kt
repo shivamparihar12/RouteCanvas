@@ -18,9 +18,9 @@ interface LocationEntityDAO {
     @Insert
     suspend fun saveTrack(track: LocationEntity)
 
-    // TODO add more CRUD functionalities
-//    @Query("SELECT * FROM track_data where lID = :id")
-//    fun getParticularTrack(id: Int): LocationEntity
+//     TODO add more CRUD functionalities
+    @Query("SELECT * FROM track_data where lID = :id")
+    suspend fun getSpecificTrack(id: Int): LocationEntity
 
 //    @Query("")
 }

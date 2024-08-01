@@ -10,4 +10,6 @@ class TrackRepository(private val db: TrackDatabase) {
      fun deleteTrack(track: LocationEntity) = db.getLocationDAO().deleteTrack(track)
 
     suspend fun saveTrack(track: LocationEntity) = db.getLocationDAO().saveTrack(track)
+
+    suspend fun getSpecificTrack(id:Int) =  db.getLocationDAO().getSpecificTrack(id)
 }

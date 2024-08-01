@@ -125,8 +125,8 @@ class MyLocationService : Service() {
     companion object {
         private const val TAG = "MyNavigationService"
         val locationRequest: LocationRequest = LocationRequest.create().apply {
-            interval = 100
-            fastestInterval = 100
+            interval = 50
+            fastestInterval = 50
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
     }

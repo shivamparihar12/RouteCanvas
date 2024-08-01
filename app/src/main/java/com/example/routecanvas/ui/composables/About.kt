@@ -70,9 +70,9 @@ fun About() {
         Spacer(modifier = Modifier.height(10.dp))
 
         HyperlinkText(
-            text = "I hate building things. You can find me on github:@shivamparihar12 and on X:@sskaraxx",
-            linkText = listOf("@shivamparihar12", "@sskaraxx"),
-            hyperlinks = listOf("https:://github.com/shivamparihar12", "https://x.com/sskaraxx"),
+            text = "I created this app because i liked the design. I don't have much to say about about me but you can find me on,\nGithub:@shivamparihar12 X:@sskaraxx Linkedin:@shivam-parihar",
+            linkText = listOf("@shivamparihar12", "@sskaraxx","@shivam-parihar"),
+            hyperlinks = listOf("https:://github.com/shivamparihar12", "https://x.com/sskaraxx","https://www.linkedin.com/in/shivam-parihar/"),
             fontSize = 15.sp
         )
     }

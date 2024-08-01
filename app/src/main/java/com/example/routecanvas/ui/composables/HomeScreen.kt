@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -76,7 +77,6 @@ fun HomeScreen(
     trackRepository: TrackRepository,
     navigateToTrackScreen: (Int) -> Unit
 ) {
-    val gridState = rememberLazyGridState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var showMenu by remember { mutableStateOf(false) }
     val trackViewModel = TrackViewModel(trackRepository)
@@ -156,16 +156,20 @@ fun HomeScreen(
                         )
                     }
                 } else {
+                    val gridState = rememberLazyGridState()
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         state = gridState,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(trackList.size) { index: Int ->
+                        items(
+                            items = trackList,
+                            key = { it.lID }
+                        ) { track ->
                             TrackCard(
-                                trackImageUri = trackList[index].trackImageUri,
-                                navigateToTrackScreen,
-                                index
+                                trackImageUri = track.trackImageUri,
+                                navigateToTrackScreen = navigateToTrackScreen,
+                                id = track.lID
                             )
                         }
                     }

@@ -11,14 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-val Blue = Color(0xFF4A5FFF)
-val LightGray = Color(0xFFF5F5F5)
-val DarkGray = Color(0xFF333333)
-
 val LightColorScheme = lightColorScheme(
     primary = Blue,
     onPrimary = Color.White,
-    background = LightGray,
+    background = Color.White,
     onBackground = DarkGray,
     surface = Color.White,
     onSurface = DarkGray

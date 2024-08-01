@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources.Theme
 import android.graphics.Bitmap
 import android.location.Location
 import android.media.MediaScannerConnection
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -71,6 +73,7 @@ import com.example.routecanvas.LocationSettingsState
 import com.example.routecanvas.db.TrackDatabase
 import com.example.routecanvas.model.LocationPoints
 import com.example.routecanvas.repository.TrackRepository
+import com.example.routecanvas.ui.theme.Blue
 import com.example.routecanvas.ui.theme.RouteCanvasTheme
 import com.example.routecanvas.viewmodel.LocationViewModel
 import com.example.routecanvas.viewmodel.LocationViewModelFactory
@@ -104,8 +107,8 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
     } else {
 
 
-        val startTrackTime = remember { mutableLongStateOf(0L) }
-        val endTrackTime = remember { mutableLongStateOf(0L) }
+        val startTrackTime = rememberSaveable { mutableLongStateOf(0L) }
+        val endTrackTime = rememberSaveable { mutableLongStateOf(0L) }
         // canvas -> bitmap requirements
         val context = LocalContext.current
         val graphicsLayer = rememberGraphicsLayer()
@@ -134,7 +137,7 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                     val uri = bitmap.asAndroidBitmap()
                         .saveToDisk(context)// learnt new thing kotlin , extension fun cool!!
                     Log.d(TAG, uri.toString())
-                    saveBitmap(context, locationViewModel, uri, startTrackTime, endTrackTime)
+                    saveToRoomDB(context, locationViewModel, uri, startTrackTime, endTrackTime)
                 }
             } else if (writeStorageAccessState.shouldShowRationale) {
                 coroutineScope.launch {
@@ -149,64 +152,68 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                 }
             } else writeStorageAccessState.launchMultiplePermissionRequest()
         }
+        Scaffold(modifier = Modifier.background(Color.White)) { paddingValues ->
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-        ) {
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .drawWithCache {
-//                    val width = this.size.width.toInt()
-//                    val height = this.size.height.toInt()
-                    onDrawWithContent {
-                        graphicsLayer.record {
-                            this@onDrawWithContent.drawContent()
-                        }
-                        drawLayer(graphicsLayer = graphicsLayer)
-                    }
-                }) {
-//                val pointsList = locationViewModel.getLocationList().collectAsState()
-                TrackingPath(
-                    pointsList = locationViewModel.getLocationList().collectAsStateWithLifecycle(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
-
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(Color.White)
             ) {
-                Button(onClick = {
-                    locationViewModel.startGettingLocationUpdate()
-                    Log.d(TAG, "Location updates started...")
-                }, modifier = Modifier.padding(10.dp)) {
-                    startTrackTime.longValue = System.currentTimeMillis()
-                    Text(text = "Start", style = MaterialTheme.typography.bodySmall)
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .drawWithCache {
+                        onDrawWithContent {
+                            graphicsLayer.record {
+                                this@onDrawWithContent.drawContent()
+                            }
+                            drawLayer(graphicsLayer = graphicsLayer)
+                        }
+                    }) {
+                    TrackingPath(
+                        pointsList = locationViewModel.getLocationList()
+                            .collectAsStateWithLifecycle(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-                Button(onClick = {
-                    locationViewModel.stopLocationUpdate()
-                    endTrackTime.longValue = System.currentTimeMillis()
-                    Log.d(TAG, "Location Updates Stopped...")
-                }, modifier = Modifier.padding(10.dp)) {
-                    Text(text = "Stop", style = MaterialTheme.typography.bodySmall)
-                }
-                Button(
-                    onClick = {
-                        saveBitmapFromComposable()
-                    }, modifier = Modifier.padding(10.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+
                 ) {
-                    Text(text = "Save", style = MaterialTheme.typography.bodySmall)
+                    Button(onClick = {
+                        locationViewModel.startGettingLocationUpdate()
+                        Log.d(TAG, "Location updates started...")
+                        startTrackTime.longValue = System.currentTimeMillis()
+                    }, modifier = Modifier.padding(10.dp)) {
+
+                        Text(text = "Start", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Button(onClick = {
+                        locationViewModel.stopLocationUpdate()
+//                    endTrackTime.longValue = System.currentTimeMillis()
+                        Log.d(TAG, "Location Updates Stopped...")
+                    }, modifier = Modifier.padding(10.dp)) {
+                        Text(text = "Stop", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Button(
+                        onClick = {
+                            saveBitmapFromComposable()
+                            endTrackTime.longValue = System.currentTimeMillis()
+                        }, modifier = Modifier.padding(10.dp)
+                    ) {
+
+                        Text(text = "Save", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
 
-
     }
 }
 
-private fun saveBitmap(
+private fun saveToRoomDB(
     context: Context,
     locationViewModel: LocationViewModel,
     uri: Uri,
@@ -284,8 +291,8 @@ fun TrackingPath(pointsList: State<List<Location>>, modifier: Modifier) {
         }
         drawPath(
             path = path,
-            color = Color.Blue,
-            style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            color = Blue, // Defined in theme
+            style = Stroke(width = 8f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             blendMode = androidx.compose.ui.graphics.BlendMode.SrcOver
         )
 
@@ -413,7 +420,7 @@ fun LocationPermissionAndGpsCheck(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "GPS settings need to be adjusted. Please enable high-accuracy mode.",
+                        "GPS is needed for this service, Pls enable GPS.",
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))

@@ -8,6 +8,7 @@ import android.content.ServiceConnection
 import android.location.Location
 import android.net.Uri
 import android.os.IBinder
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -128,7 +129,10 @@ class LocationViewModel(
                 date = Calendar.getInstance().time,
                 timeLapsed = endTime.value - startTime.value,
                 trackImageUri = uri.path.toString()
-            ).let { trackRepository.saveTrack(it) }
+            ).let {
+                Log.d("LocationViewModel", " ${it.trackImageUri}  ${it.date}  ${it.timeLapsed}")
+                trackRepository.saveTrack(it)
+            }
         }
     }
 

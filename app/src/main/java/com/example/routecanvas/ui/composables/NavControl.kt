@@ -1,6 +1,8 @@
 package com.example.routecanvas.ui.composables
 
 import android.app.Application
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,7 +30,10 @@ fun NavControl(application: Application, trackRepository: TrackRepository) {
          onDispose { navController.removeOnDestinationChangedListener(listener = listener) }
      }*/
 
-    NavHost(navController = navController, startDestination = Screens.HomeScreen) {
+    NavHost(navController = navController,
+        startDestination = Screens.HomeScreen,
+        enterTransition = { fadeIn() },
+        exitTransition = { fadeOut() }) {
         composable<Screens.HomeScreen> {
             HomeScreen(
                 navigateToAbout = { navController.navigate(Screens.About) },
@@ -39,11 +44,10 @@ fun NavControl(application: Application, trackRepository: TrackRepository) {
         }
 
         composable<Screens.TrackScreen> {
-//            val args = it.toRoute<Screens.TrackScreen>()
-//            TrackScreen(id = args.id)
-                backStackEntry ->
-            val args = backStackEntry.toRoute<Screens.TrackScreen>()
-            TrackScreen(id = args.id)
+            val args = it.toRoute<Screens.TrackScreen>()
+            TrackScreen(id = args.id, trackRepository = trackRepository) {
+                navController.popBackStack()
+            }
         }
 
         composable<Screens.RunningScreen> {
