@@ -31,7 +31,7 @@ fun About() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
+            .padding(30.dp)
     ) {
         Text(
             text = "About",

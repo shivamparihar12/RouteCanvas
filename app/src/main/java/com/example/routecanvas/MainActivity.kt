@@ -4,23 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.routecanvas.db.TrackDatabase
 import com.example.routecanvas.repository.TrackRepository
 import com.example.routecanvas.ui.composables.NavControl
 import com.example.routecanvas.ui.theme.RouteCanvasTheme
-import com.example.routecanvas.viewmodel.LocationViewModel
-import com.example.routecanvas.viewmodel.LocationViewModelFactory
-import com.example.routecanvas.viewmodel.TrackViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var trackRepository: TrackRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        trackRepository = TrackRepository(TrackDatabase(this))
+        installSplashScreen()
         enableEdgeToEdge()
+        trackRepository = TrackRepository(TrackDatabase(this))
+
         setContent {
             RouteCanvasTheme {
                 NavControl(application, trackRepository)

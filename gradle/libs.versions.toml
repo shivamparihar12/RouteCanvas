@@ -17,6 +17,10 @@ kotlinSerializationVersion = "1.6.3"
 accompanistVersion = "0.35.1-alpha"
 coilVersion = "2.7.0"
 #glideVersion = "1.0.0-beta01"
+splashScreen = "1.0.0"
+appcompatVersion = "1.7.0"
+materialVersion = "1.12.0"
+activityVersion = "1.9.1"
 
 
 [libraries]
@@ -44,6 +48,10 @@ kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serial
 google-accompanist = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistVersion" }
 coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilVersion" }
 #glide = { group = "com.github.bumptech.glide", name = "compose", version.ref = "glideVersion" }
+splashScreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashScreen" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompatVersion" }
+material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activityVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -173,8 +173,7 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                     }) {
                     TrackingPath(
                         pointsList = locationViewModel.getLocationList()
-                            .collectAsStateWithLifecycle(),
-                        modifier = Modifier.fillMaxWidth()
+                            .collectAsStateWithLifecycle(), modifier = Modifier.fillMaxWidth()
                     )
                 }
                 Row(
@@ -185,6 +184,7 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                     Button(onClick = {
                         locationViewModel.startGettingLocationUpdate()
                         Log.d(TAG, "Location updates started...")
+                        Toast.makeText(context, "Starting...", Toast.LENGTH_SHORT).show()
                         startTrackTime.longValue = System.currentTimeMillis()
                     }, modifier = Modifier.padding(10.dp)) {
 
@@ -194,6 +194,7 @@ fun RunningScreen(application: Application, trackRepository: TrackRepository) {
                         locationViewModel.stopLocationUpdate()
 //                    endTrackTime.longValue = System.currentTimeMillis()
                         Log.d(TAG, "Location Updates Stopped...")
+                        Toast.makeText(context, "Location updates stopped", Toast.LENGTH_SHORT).show()
                     }, modifier = Modifier.padding(10.dp)) {
                         Text(text = "Stop", style = MaterialTheme.typography.bodySmall)
                     }
