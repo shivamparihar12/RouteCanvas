@@ -22,6 +22,8 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.concurrent.TimeUnit
 
 class MyLocationService : Service() {
@@ -31,7 +33,8 @@ class MyLocationService : Service() {
     //    private var scope = CoroutineScope(Dispatchers.IO + job)
     private val serviceBinder = LocalBinder()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-//    private lateinit var locationRequest: LocationRequest
+
+    //    private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private val _locationStateFlow = MutableStateFlow<Location?>(null)
     val locationStateFlow: StateFlow<Location?> = _locationStateFlow.asStateFlow()
@@ -59,15 +62,30 @@ class MyLocationService : Service() {
 //        }
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                if (locationResult.lastLocation != null) {
-                    val currentLocation = locationResult.lastLocation
-                    Log.d(TAG, "last location ${currentLocation.toString()}")
-                    _locationStateFlow.value = currentLocation
-                } else Log.d(TAG, "this location is null")
+                val currentLocation = locationResult.lastLocation
+                if (currentLocation != null) {
+                    // TODO
+                    val roundedLatitude = round(currentLocation.latitude, 5)
+                    val roundedLongitude = round(currentLocation.longitude, 5)
 
+                    val roundedLocation = Location(currentLocation).apply {
+                        latitude = roundedLatitude
+                        longitude = roundedLongitude
+                    }
+
+                    Log.d(TAG, "last location $roundedLocation")
+                    _locationStateFlow.value = roundedLocation
+                } else {
+                    Log.d(TAG, "this location is null")
+                }
             }
         }
 //        startLocationUpdate()
+    }
+
+    fun round(value: Double, places: Int): Double {
+        require(places >= 0) { "Decimal places must be non-negative" }
+        return BigDecimal(value).setScale(places, RoundingMode.HALF_UP).toDouble()
     }
 
     override fun onCreate() {
@@ -101,9 +119,7 @@ class MyLocationService : Service() {
     @SuppressLint("MissingPermission")
     fun startLocationUpdate() {
         fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
+            locationRequest, locationCallback, Looper.getMainLooper()
         )
     }
 
