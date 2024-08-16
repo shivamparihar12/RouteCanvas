@@ -65,8 +65,8 @@ class MyLocationService : Service() {
                 val currentLocation = locationResult.lastLocation
                 if (currentLocation != null) {
                     // TODO
-                    val roundedLatitude = round(currentLocation.latitude, 5)
-                    val roundedLongitude = round(currentLocation.longitude, 5)
+                    val roundedLatitude = round(currentLocation.latitude.toPositive(), 5)
+                    val roundedLongitude = round(currentLocation.longitude.toPositive(), 5)
 
                     val roundedLocation = Location(currentLocation).apply {
                         latitude = roundedLatitude
@@ -86,6 +86,10 @@ class MyLocationService : Service() {
     fun round(value: Double, places: Int): Double {
         require(places >= 0) { "Decimal places must be non-negative" }
         return BigDecimal(value).setScale(places, RoundingMode.HALF_UP).toDouble()
+    }
+
+    fun Double.toPositive():Double{
+       return if (this<0) -this else this
     }
 
     override fun onCreate() {
